@@ -15,6 +15,7 @@ import android.telephony.SmsManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
+import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -27,6 +28,7 @@ import java.util.List;
 
 public class MainActivity extends Activity {
     private static final int MY_PERMISSIONS_REQUEST_SEND_SMS = 0;
+    private static final int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 2;
     Button sendBtn;
     EditText txtMessage;
     String message;
@@ -35,6 +37,12 @@ public class MainActivity extends Activity {
     PendingIntent sentPI, deliveredPI;
     BroadcastReceiver smsSentReceiver, smsDeliveredReceiver;
     SmsManager smsManager = SmsManager.getDefault();
+
+    @Nullable
+    @Override
+    public File getExternalFilesDir(@Nullable String type) {
+        return super.getExternalFilesDir(type);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -108,9 +116,6 @@ public class MainActivity extends Activity {
         message = txtMessage.getText().toString();
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.SEND_SMS}, MY_PERMISSIONS_REQUEST_SEND_SMS);
-        }
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
         } else
             SendTextMsg();
     }
@@ -127,9 +132,10 @@ public class MainActivity extends Activity {
                         throw new RuntimeException(e);
                     }
                 } else {
-                    Toast.makeText(getApplicationContext(), "SMS failed, please try again.", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "SMS failed", Toast.LENGTH_LONG).show();
                 }
             }
+
         }
     }
 
@@ -137,8 +143,8 @@ public class MainActivity extends Activity {
     private void SendTextMsg() throws FileNotFoundException {
         List<String> phones = new ArrayList<>();
         phones.add("48501474399");
-        phones.add("48501474399");
-        File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+        phones.add("48518970434");
+        File path = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
         File file = new File(path, "/" + "output.txt");
         PrintStream stream = new PrintStream(file);
         System.setOut(stream);
