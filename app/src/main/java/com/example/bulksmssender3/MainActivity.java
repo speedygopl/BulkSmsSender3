@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.telephony.SmsManager;
@@ -16,7 +17,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
-import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -24,11 +24,10 @@ import androidx.core.content.ContextCompat;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends Activity {
-    private static final int MY_PERMISSIONS_REQUEST_SEND_SMS = 0;
-    private static final int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 1;
     Button sendBtn;
     EditText txtMessage;
     String message;
@@ -53,9 +52,7 @@ public class MainActivity extends Activity {
             public void onClick(View view) {
                 try {
                     sendSMS();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                } catch (InterruptedException e) {
+                } catch (IOException | InterruptedException e) {
                     throw new RuntimeException(e);
                 }
             }
@@ -73,7 +70,6 @@ public class MainActivity extends Activity {
             public void onReceive(Context context, Intent intent) {
                 switch (getResultCode()) {
                     case Activity.RESULT_OK:
-                        receivedCodes.add("Sent code : " + Activity.RESULT_OK);
                         Toast.makeText(MainActivity.this, "SMS sent OK", Toast.LENGTH_SHORT).show();
                         break;
                     case SmsManager.RESULT_ERROR_GENERIC_FAILURE:
@@ -95,7 +91,6 @@ public class MainActivity extends Activity {
         smsDeliveredReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                receivedCodes.add("Delivered code : " + getResultCode());
                 switch (getResultCode()) {
                     case Activity.RESULT_OK:
                         Toast.makeText(MainActivity.this, "SMS delivered OK", Toast.LENGTH_SHORT).show();
@@ -129,10 +124,15 @@ public class MainActivity extends Activity {
 
     protected void sendSMS() throws IOException, InterruptedException {
         message = txtMessage.getText().toString();
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.SEND_SMS}, MY_PERMISSIONS_REQUEST_SEND_SMS);
-        } else {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED
+         || ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
+         || ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
+         || ContextCompat.checkSelfPermission(this, Manifest.permission.MANAGE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)
 
+        {
+            String[] permissions = {Manifest.permission.SEND_SMS, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.MANAGE_EXTERNAL_STORAGE};
+            ActivityCompat.requestPermissions(this, permissions, 1);
+        } else {
             SendTextMsg();
         }
     }
@@ -140,42 +140,23 @@ public class MainActivity extends Activity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        switch (requestCode) {
-            case MY_PERMISSIONS_REQUEST_SEND_SMS: {
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    try {
-                        SendTextMsg();
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-                } else {
-                    Toast.makeText(getApplicationContext(), "SMS failed", Toast.LENGTH_LONG).show();
-                }
+        if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            try {
+                SendTextMsg();
+            } catch (IOException | InterruptedException e) {
+                throw new RuntimeException(e);
             }
-            case MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE: {
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    try {
-                        SendTextMsg();
-                    } catch (FileNotFoundException e) {
-                        throw new RuntimeException(e);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-
-            }
+        } else {
+            Toast.makeText(getApplicationContext(), "SMS failed", Toast.LENGTH_LONG).show();
         }
     }
 
 
     private void SendTextMsg() throws IOException, InterruptedException {
-        List<String> phones = readListOfPhoneNumbers();
+        List<String> phones = readTextFromUri();
         for (String number : phones) {
             smsManager.sendTextMessage(number, null, message, sentPI, deliveredPI);
+            TimeUnit.SECONDS.sleep(2);
         }
     }
 
@@ -198,5 +179,24 @@ public class MainActivity extends Activity {
         }
         return phones;
     }
+
+    private List<String> readTextFromUri() throws IOException {
+        List<String> phones = new ArrayList<>();
+        String dirDocPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath();
+        File file = new File(dirDocPath
+                + File.separator + "input.txt");
+        Uri path = Uri.fromFile(file);
+        try (InputStream inputStream =
+                     getContentResolver().openInputStream(path);
+             BufferedReader reader = new BufferedReader(
+                     new InputStreamReader(Objects.requireNonNull(inputStream)))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                phones.add(line);
+            }
+        }
+        return phones;
+    }
+
 
 }
