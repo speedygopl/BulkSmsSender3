@@ -12,6 +12,7 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.ParcelFileDescriptor;
 import android.telephony.SmsManager;
 import android.view.View;
 import android.widget.Button;
@@ -125,12 +126,8 @@ public class MainActivity extends Activity {
     protected void sendSMS() throws IOException, InterruptedException {
         message = txtMessage.getText().toString();
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED
-         || ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
-         || ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
-         || ContextCompat.checkSelfPermission(this, Manifest.permission.MANAGE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)
-
-        {
-            String[] permissions = {Manifest.permission.SEND_SMS, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.MANAGE_EXTERNAL_STORAGE};
+                || ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            String[] permissions = {Manifest.permission.SEND_SMS, Manifest.permission.READ_EXTERNAL_STORAGE};
             ActivityCompat.requestPermissions(this, permissions, 1);
         } else {
             SendTextMsg();
@@ -153,7 +150,7 @@ public class MainActivity extends Activity {
 
 
     private void SendTextMsg() throws IOException, InterruptedException {
-        List<String> phones = readTextFromUri();
+        List<String> phones = readFileFromUri();
         for (String number : phones) {
             smsManager.sendTextMessage(number, null, message, sentPI, deliveredPI);
             TimeUnit.SECONDS.sleep(2);
@@ -198,5 +195,29 @@ public class MainActivity extends Activity {
         return phones;
     }
 
+    private List<String> readFileFromUri() throws IOException {
+        List<String> phones = new ArrayList<>();
+        String dirDownloadPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath();
+        String dirDownloadPathSelf = "storage/self/primary/Download";
+        File file = new File(dirDownloadPathSelf
+                + File.separator + "input.txt");
+        Uri uri = Uri.fromFile(file);
+        String readOnlyMode = "r";
+        try {
+            ParcelFileDescriptor pfd = getContentResolver().openFileDescriptor(uri, readOnlyMode);
+            InputStream inputStream = new FileInputStream(pfd.getFileDescriptor());
+            BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(Objects.requireNonNull(inputStream)));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                phones.add(line);
+            }
+
+        } catch (IOException e) {
+            throw new RuntimeException(e + " " + uri);
+        }
+        return phones;
+    }
 
 }
+
