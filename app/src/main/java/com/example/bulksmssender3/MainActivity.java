@@ -30,8 +30,8 @@ import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends Activity {
     Button sendBtn;
-    EditText txtMessage;
-    String message;
+    String message = "Poradnia Pomost. Prosimy o wystawienie 5 gwiazdkowej opinii na google. Dziękujemy!\n" + "https://g.page/r/CUGOwi-petQhEAg/review";
+    String message1 = "Poradnia Pomost";
     String SENT = "SMS_SENT";
     String DELIVERED = "SMS_DELIVERED";
     PendingIntent sentPI, deliveredPI;
@@ -47,7 +47,6 @@ public class MainActivity extends Activity {
         ConstraintLayout constraintLayout = findViewById(R.id.main_layout);
         constraintLayout.setBackgroundColor(Color.GRAY);
         sendBtn = findViewById(R.id.btnSendSMS);
-        txtMessage = findViewById(R.id.editText2);
         sendBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -124,7 +123,6 @@ public class MainActivity extends Activity {
     }
 
     protected void sendSMS() throws IOException, InterruptedException {
-        message = txtMessage.getText().toString();
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED
                 || ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             String[] permissions = {Manifest.permission.SEND_SMS, Manifest.permission.READ_EXTERNAL_STORAGE};
@@ -151,9 +149,14 @@ public class MainActivity extends Activity {
 
     private void SendTextMsg() throws IOException, InterruptedException {
         List<String> phones = readFileFromUri();
+        ArrayList<String> parts = smsManager.divideMessage(message);
+        ArrayList<PendingIntent> sendList = new ArrayList<>();
+        sendList.add(sentPI);
+        ArrayList<PendingIntent> deliverList = new ArrayList<>();
+        deliverList.add(deliveredPI);
         for (String number : phones) {
-            smsManager.sendTextMessage(number, null, message, sentPI, deliveredPI);
-            TimeUnit.SECONDS.sleep(2);
+            smsManager.sendMultipartTextMessage(number, null, parts, sendList, deliverList);
+            TimeUnit.SECONDS.sleep(3);
         }
     }
 
