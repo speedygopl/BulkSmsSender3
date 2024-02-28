@@ -14,6 +14,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.ParcelFileDescriptor;
 import android.telephony.SmsManager;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -37,8 +38,7 @@ public class MainActivity extends Activity {
     SmsManager smsManager = SmsManager.getDefault();
     List<String> receivedCodes = new ArrayList<>();
     private EditText editTextSMS;
-
-
+    private static final String TAG = "MainActivity";
 
 
     @Override
@@ -151,12 +151,14 @@ public class MainActivity extends Activity {
 
     private void SendTextMsg() throws IOException, InterruptedException {
         List<String> phones = readFileFromUri();
-        ArrayList<String> parts = smsManager.divideMessage(editTextSMS.getText().toString());
+        String message = editTextSMS.getText().toString();
+        ArrayList<String> parts = smsManager.divideMessage(message);
         ArrayList<PendingIntent> sendList = new ArrayList<>();
         sendList.add(sentPI);
         ArrayList<PendingIntent> deliverList = new ArrayList<>();
         deliverList.add(deliveredPI);
         for (String number : phones) {
+            Log.i(TAG, "wiadomość: " + message + "; na numer:  " + number);
             smsManager.sendMultipartTextMessage(number, null, parts, sendList, deliverList);
             TimeUnit.SECONDS.sleep(2);
         }
