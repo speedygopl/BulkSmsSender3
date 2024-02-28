@@ -13,6 +13,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.ParcelFileDescriptor;
+import android.os.PowerManager;
 import android.telephony.SmsManager;
 import android.util.Log;
 import android.view.View;
@@ -22,6 +23,7 @@ import android.widget.Toast;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+
 
 import java.io.*;
 import java.util.ArrayList;
@@ -39,6 +41,8 @@ public class MainActivity extends Activity {
     List<String> receivedCodes = new ArrayList<>();
     private EditText editTextSMS;
     private static final String TAG = "MainActivity";
+    PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
+    PowerManager.WakeLock wakeLock = powerManager.newWakeLock(PowerManager.FULL_WAKE_LOCK, TAG + "::MyWakelockTag");
 
 
     @Override
@@ -157,11 +161,13 @@ public class MainActivity extends Activity {
         sendList.add(sentPI);
         ArrayList<PendingIntent> deliverList = new ArrayList<>();
         deliverList.add(deliveredPI);
+        wakeLock.acquire();
         for (String number : phones) {
             Log.i(TAG, "wiadomość: " + message + "; na numer:  " + number);
             smsManager.sendMultipartTextMessage(number, null, parts, sendList, deliverList);
             TimeUnit.SECONDS.sleep(2);
         }
+        wakeLock.release();
     }
 
     public List<String> readListOfPhoneNumbers() {
