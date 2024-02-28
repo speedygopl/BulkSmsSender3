@@ -30,21 +30,22 @@ import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends Activity {
     Button sendBtn;
-//    String message = "Poradnia Pomost. Prosimy o wystawienie 5 gwiazdkowej opinii na google. Dziękujemy!\n" + "https://g.page/r/CUGOwi-petQhEAg/review";
-    String message = "Poradnia Pomost. Prosimy o wystawienie 5 gwiazdkowej opinii na google. Dziękujemy!\n" + "https://g.page/r/CUGOwi-petQhEAg/review" + "Poradnia Pomost. Prosimy o wystawienie 5 gwiazdkowej opinii na google. Dziękujemy!\n" + "https://g.page/r/CUGOwi-petQhEAg/review";
-    String message1 = "Poradnia Pomost";
     String SENT = "SMS_SENT";
     String DELIVERED = "SMS_DELIVERED";
     PendingIntent sentPI, deliveredPI;
     BroadcastReceiver smsSentReceiver, smsDeliveredReceiver;
     SmsManager smsManager = SmsManager.getDefault();
     List<String> receivedCodes = new ArrayList<>();
+    private EditText editTextSMS;
+
+
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity);
+        editTextSMS = (EditText) findViewById(R.id.editTextSMS);
         ConstraintLayout constraintLayout = findViewById(R.id.main_layout);
         constraintLayout.setBackgroundColor(Color.GRAY);
         sendBtn = findViewById(R.id.btnSendSMS);
@@ -150,14 +151,14 @@ public class MainActivity extends Activity {
 
     private void SendTextMsg() throws IOException, InterruptedException {
         List<String> phones = readFileFromUri();
-        ArrayList<String> parts = smsManager.divideMessage(message);
+        ArrayList<String> parts = smsManager.divideMessage(editTextSMS.getText().toString());
         ArrayList<PendingIntent> sendList = new ArrayList<>();
         sendList.add(sentPI);
         ArrayList<PendingIntent> deliverList = new ArrayList<>();
         deliverList.add(deliveredPI);
         for (String number : phones) {
             smsManager.sendMultipartTextMessage(number, null, parts, sendList, deliverList);
-            TimeUnit.SECONDS.sleep(3);
+            TimeUnit.SECONDS.sleep(2);
         }
     }
 
