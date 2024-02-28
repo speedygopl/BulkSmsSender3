@@ -30,7 +30,8 @@ import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends Activity {
     Button sendBtn;
-    String message = "Poradnia Pomost. Prosimy o wystawienie 5 gwiazdkowej opinii na google. Dziękujemy!\n" + "https://g.page/r/CUGOwi-petQhEAg/review";
+//    String message = "Poradnia Pomost. Prosimy o wystawienie 5 gwiazdkowej opinii na google. Dziękujemy!\n" + "https://g.page/r/CUGOwi-petQhEAg/review";
+    String message = "Poradnia Pomost. Prosimy o wystawienie 5 gwiazdkowej opinii na google. Dziękujemy!\n" + "https://g.page/r/CUGOwi-petQhEAg/review" + "Poradnia Pomost. Prosimy o wystawienie 5 gwiazdkowej opinii na google. Dziękujemy!\n" + "https://g.page/r/CUGOwi-petQhEAg/review";
     String message1 = "Poradnia Pomost";
     String SENT = "SMS_SENT";
     String DELIVERED = "SMS_DELIVERED";
