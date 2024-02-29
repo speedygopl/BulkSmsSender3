@@ -41,8 +41,7 @@ public class MainActivity extends Activity {
     List<String> receivedCodes = new ArrayList<>();
     private EditText editTextSMS;
     private static final String TAG = "MainActivity";
-    PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
-    PowerManager.WakeLock wakeLock = powerManager.newWakeLock(PowerManager.FULL_WAKE_LOCK, TAG + "::MyWakelockTag");
+
 
 
     @Override
@@ -156,18 +155,30 @@ public class MainActivity extends Activity {
     private void SendTextMsg() throws IOException, InterruptedException {
         List<String> phones = readFileFromUri();
         String message = editTextSMS.getText().toString();
-        ArrayList<String> parts = smsManager.divideMessage(message);
+        String message1 = "To jest wiadomość testowa. Proszę na nią nie odpowiadać. To jest wiadomość testowa. Proszę na nią nie odpowiadać. To jest wiadomość testowa. Proszę na nią nie odpowiadać. To jest wiadomość testowa. Proszę na nią nie odpowiadać.";
+        ArrayList<String> parts = smsManager.divideMessage(message1);
         ArrayList<PendingIntent> sendList = new ArrayList<>();
         sendList.add(sentPI);
         ArrayList<PendingIntent> deliverList = new ArrayList<>();
         deliverList.add(deliveredPI);
-        wakeLock.acquire();
-        for (String number : phones) {
-            Log.i(TAG, "wiadomość: " + message + "; na numer:  " + number);
-            smsManager.sendMultipartTextMessage(number, null, parts, sendList, deliverList);
-            TimeUnit.SECONDS.sleep(2);
-        }
-        wakeLock.release();
+        new Thread(new Runnable() {
+            public void run() {
+                PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
+                PowerManager.WakeLock wakeLock = powerManager.newWakeLock(PowerManager.FULL_WAKE_LOCK, TAG + "::MyWakelockTag");
+                wakeLock.acquire();
+                for (String number : phones) {
+                    Log.i(TAG, "wiadomość: " + message1 + "; na numer:  " + number);
+                    smsManager.sendMultipartTextMessage(number, null, parts, sendList, deliverList);
+                    try {
+                        TimeUnit.SECONDS.sleep(2);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+                wakeLock.release();
+            }
+        }).start();
+
     }
 
     public List<String> readListOfPhoneNumbers() {
