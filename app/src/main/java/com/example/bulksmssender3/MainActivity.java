@@ -38,10 +38,8 @@ public class MainActivity extends Activity {
     PendingIntent sentPI, deliveredPI;
     BroadcastReceiver smsSentReceiver, smsDeliveredReceiver;
     SmsManager smsManager = SmsManager.getDefault();
-    List<String> receivedCodes = new ArrayList<>();
     private EditText editTextSMS;
     private static final String TAG = "MainActivity";
-
 
 
     @Override
@@ -69,7 +67,6 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
-
         smsSentReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -110,16 +107,6 @@ public class MainActivity extends Activity {
         registerReceiver(smsDeliveredReceiver, new IntentFilter(DELIVERED));
     }
 
-    public void receiverPrintResultCodeToFile() throws IOException {
-        String text = "";
-        for (String r : receivedCodes) {
-            System.out.println(r);
-            text = text + " " + r;
-        }
-        FileOutputStream fileOutputStream = openFileOutput("output1.txt", MODE_PRIVATE);
-        fileOutputStream.write(text.getBytes());
-    }
-
     @Override
     protected void onPause() {
         super.onPause();
@@ -140,7 +127,8 @@ public class MainActivity extends Activity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+        if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED
+                && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
             try {
                 SendTextMsg();
             } catch (IOException | InterruptedException e) {
@@ -179,44 +167,6 @@ public class MainActivity extends Activity {
             }
         }).start();
 
-    }
-
-    public List<String> readListOfPhoneNumbers() {
-        List<String> phones = new ArrayList<>();
-        try {
-            FileInputStream fIn = openFileInput("input.txt");
-            InputStreamReader isr = new InputStreamReader(fIn);
-            BufferedReader buffreader = new BufferedReader(isr);
-
-            String readString = buffreader.readLine();
-            while (readString != null) {
-                phones.add(readString);
-                readString = buffreader.readLine();
-            }
-
-            isr.close();
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
-        }
-        return phones;
-    }
-
-    private List<String> readTextFromUri() throws IOException {
-        List<String> phones = new ArrayList<>();
-        String dirDocPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath();
-        File file = new File(dirDocPath
-                + File.separator + "input.txt");
-        Uri path = Uri.fromFile(file);
-        try (InputStream inputStream =
-                     getContentResolver().openInputStream(path);
-             BufferedReader reader = new BufferedReader(
-                     new InputStreamReader(Objects.requireNonNull(inputStream)))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                phones.add(line);
-            }
-        }
-        return phones;
     }
 
     private List<String> readFileFromUri() throws IOException {
