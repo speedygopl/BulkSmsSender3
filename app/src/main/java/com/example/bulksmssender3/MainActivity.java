@@ -143,8 +143,7 @@ public class MainActivity extends Activity {
     private void SendTextMsg() throws IOException, InterruptedException {
         List<String> phones = readFileFromUri();
         String message = editTextSMS.getText().toString();
-        String message1 = "To jest wiadomość testowa. Proszę na nią nie odpowiadać. To jest wiadomość testowa. Proszę na nią nie odpowiadać. To jest wiadomość testowa. Proszę na nią nie odpowiadać. To jest wiadomość testowa. Proszę na nią nie odpowiadać.";
-        ArrayList<String> parts = smsManager.divideMessage(message1);
+        ArrayList<String> parts = smsManager.divideMessage(message);
         ArrayList<PendingIntent> sendList = new ArrayList<>();
         sendList.add(sentPI);
         ArrayList<PendingIntent> deliverList = new ArrayList<>();
@@ -155,7 +154,7 @@ public class MainActivity extends Activity {
                 PowerManager.WakeLock wakeLock = powerManager.newWakeLock(PowerManager.FULL_WAKE_LOCK, TAG + "::MyWakelockTag");
                 wakeLock.acquire();
                 for (String number : phones) {
-                    Log.i(TAG, "wiadomość: " + message1 + "; na numer:  " + number);
+                    Log.i(TAG, "wiadomość: " + message + "; na numer:  " + number);
                     smsManager.sendMultipartTextMessage(number, null, parts, sendList, deliverList);
                     try {
                         TimeUnit.SECONDS.sleep(2);
